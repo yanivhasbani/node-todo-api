@@ -31,6 +31,8 @@ app.listen(4001, () => {
    console.log('Started on port 4001');
 });
 
+module.exports = {app};
+
 //URLS:
 //Mongoose validators - http://mongoosejs.com/docs/validation.html
 //Mongoose schemas - http://mongoosejs.com/docs/guide.html
