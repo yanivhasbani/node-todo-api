@@ -27,6 +27,18 @@ app.post('/todos', (req, res) => {
    });
 });
 
+//Get all the todos from DB
+app.get('/todos', (req, res) => {
+   Todo.find().then((todos) => {
+      console.log(`Succesfully got all todos = ${JSON.stringify(todos, undefined, 2)}`);
+      //No need to add status here as 200 is the default!
+      res.send(todos);
+   }, (e) => {
+      console.log(`Error fetching todos from database. err = ${e}`);
+      res.status(400).send(e);
+   });
+});
+
 app.listen(4001, () => {
    console.log('Started on port 4001');
 });
