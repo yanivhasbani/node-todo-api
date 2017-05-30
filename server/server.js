@@ -3,6 +3,7 @@
  */
 var express = require('express');
 var bodyParser = require('body-parser');
+const {ObjectID} = require('mongodb');
 
 var {mongoose} = require('./db/mongoose');
 var {Todo} = require('./models/todo');
@@ -37,6 +38,30 @@ app.get('/todos', (req, res) => {
       console.log(`Error fetching todos from database. err = ${e}`);
       res.status(400).send(e);
    });
+});
+
+
+//Get specific todo by id - URL parameter
+app.get('/todos/:id', (req, res) => {
+   //get :id from url - req.params is a dictionary
+   var id = req.params.id;
+
+   if (!ObjectID.isValid(id)) {
+      console.log('Invalid id');
+      res.status(404).send({});
+   }
+
+   Todo.findById(id).then((todo) => {
+      if (!todo) {
+         console.log(('No todo with that specific ID'));
+         res.status(404).send({});
+      }
+      console.log((`Returning ${todo}`));
+      res.send({todo});
+   }).catch((e) => {
+      console.log((`Error in fetching todo by id`));
+      res.status(400).send({});
+   })
 });
 
 app.listen(4001, () => {
