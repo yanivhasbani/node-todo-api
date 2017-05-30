@@ -10,6 +10,7 @@ var {Todo} = require('./models/todo');
 var {User} = require('./models/user');
 
 var app = express();
+let port = process.env.PORT || 4001;
 
 //Middleware - To make the res.body to become a JSON
 app.use(bodyParser.json());
@@ -64,8 +65,8 @@ app.get('/todos/:id', (req, res) => {
    })
 });
 
-app.listen(4001, () => {
-   console.log('Started on port 4001');
+app.listen(port, () => {
+   console.log(`Started on port ${port}`);
 });
 
 module.exports = {app};
@@ -73,3 +74,6 @@ module.exports = {app};
 //URLS:
 //Mongoose validators - http://mongoosejs.com/docs/validation.html
 //Mongoose schemas - http://mongoosejs.com/docs/guide.html
+
+//Heroku
+//https://elements.heroku.com/addons/mongolab

@@ -3,14 +3,17 @@
  */
 let expect = require('expect');
 let request = require('supertest');
+let {ObjectID} = require('mongodb');
 
 const {app} = require('./../server')
 const {Todo} = require('./../models/todo')
 
 const todos = [{
-    text : 'First test to do'
+    text : 'First test to do',
+    _id : new ObjectID()
 }, {
-    text : 'Second test to do'
+    text : 'Second test to do',
+    _id : new ObjectID()
 }];
 
 beforeEach((done) => {
@@ -72,6 +75,40 @@ describe('GET /todos', () => {
             .expect(200)
             .expect((res) => {
                 expect(res.body.todos.length).toBe(2);
+            })
+            .end(done)
+    });
+});
+
+
+describe('GET /todos/:id', () => {
+    it('should GET the correct todo by id', (done) => {
+        request(app)
+            .get(`/todos/${todos[0]._id.toString()}`)
+            .expect(200)
+            .expect((res) => {
+                expect(res.body.todo._id.toString()).toEqual(todos[0]._id.toString());
+                expect(res.body.todo.text).toEqual(todos[0].text);
+            })
+            .end(done)
+    });
+
+    it('should GET an error because of a invalid ObjectID', (done) => {
+        request(app)
+            .get(`/todos/123`)
+            .expect(404)
+            .expect((res) => {
+                expect(!res.body.todo);
+            })
+            .end(done)
+    });
+
+    it('should GET an error because of todo not found', (done) => {
+        request(app)
+            .get(`/todos/592d849dde3a14a396fbbb20`)
+            .expect(404)
+            .expect((res) => {
+                expect(!res.body.todo);
             })
             .end(done)
     });
