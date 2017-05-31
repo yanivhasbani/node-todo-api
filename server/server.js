@@ -89,9 +89,7 @@ app.delete('/todos/:id', (req, res) => {
 app.patch('/todos/:id', (req, res) => {
    var id = req.params.id;
    //Pick the propertis you with out of a dictionary and returns those only!
-   console.log(`Body0 = ${JSON.stringify(req.body, undefined,2)}`);
    var body = _.pick(req.body, ['text', 'completed']);
-   console.log(`Body1 = ${JSON.stringify(body, undefined,2)}`);
    if (!ObjectID.isValid(id)) {
       console.log('Invalid id on patch request');
       return res.status(404).send();
