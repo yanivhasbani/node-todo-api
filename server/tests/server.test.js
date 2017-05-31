@@ -113,3 +113,49 @@ describe('GET /todos/:id', () => {
             .end(done)
     });
 });
+
+
+describe('DELETE /todos/:id', () => {
+    it('should DELETE existing todo from collection', (done) => {
+        var id = todos[1]._id.toString();
+        console.log(`/todos/${id}`);
+        request(app)
+            .delete(`/todos/${id}`)
+            .expect(200)
+            .expect((res) => {
+                expect(res.body.todo.text).toEqual(todos[1].text);
+            })
+            .end((res, err) => {
+                if (err) {
+                    return done(err);
+                }
+
+                Todo.findById(id).then((todo) => {
+                    expect(todo).toNotExists();
+                    done();
+                }).catch((e) => done(e));
+            })
+    });
+
+    it('Invalid ID on DELETE should result in 404', (done) => {
+        request(app)
+            .delete(`/todos/${todos[0]._id.toString() + '444'}`)
+            .expect(404)
+            .expect((res) => {
+                expect(!res.body)
+            })
+            .end(done)
+    });
+
+    it('Non existing ID on DELETE should result in 404', (done) => {
+        id = todos[0]._id.toString();
+        id = id.substr(0,id.length - 1) + 'j';
+        request(app)
+            .delete(`/todos/${id}`)
+            .expect(404)
+            .expect((res) => {
+                expect(!res.body)
+            })
+            .end(done)
+    });
+});
