@@ -125,13 +125,13 @@ describe('DELETE /todos/:id', () => {
             .expect((res) => {
                 expect(res.body.todo.text).toEqual(todos[1].text);
             })
-            .end((res, err) => {
+            .end((err,res) => {
                 if (err) {
                     return done(err);
                 }
 
                 Todo.findById(id).then((todo) => {
-                    expect(todo).toNotExists();
+                    expect(todo).toNotExist();
                     done();
                 }).catch((e) => done(e));
             })
