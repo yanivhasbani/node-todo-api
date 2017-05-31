@@ -10,9 +10,6 @@ mongoose.Promise = global.Promise;
 //mongoose connect assure that even if you have a code
 //That will be called before connect will finish,
 //it will still work, event if the DB is not yet created!
-var test = false
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/TodoApp');
+mongoose.connect(process.env.MONGODB_URI);
 
-module.exports = {
-    mongoose
-};
+module.exports = {mongoose};
