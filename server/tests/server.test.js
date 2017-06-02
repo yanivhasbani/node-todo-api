@@ -5,25 +5,14 @@ let expect = require('expect');
 let request = require('supertest');
 let {ObjectID} = require('mongodb');
 
-const {app} = require('./../server')
-const {Todo} = require('./../models/todo')
+const {app} = require('./../server');
+const {Todo} = require('./../models/todo');
+const {User} = require('./../models/user');
+const {todos, populateTodos, users, populateUsers} = require('./seed/seed');
 
-const todos = [{
-    text : 'First test to do',
-    _id : new ObjectID()
-}, {
-    text : 'Second test to do',
-    _id : new ObjectID(),
-    completed : true,
-    completedAt : 333
-}];
 
-beforeEach((done) => {
-    //Remove everything on Todo collection
-    Todo.remove({}).then(() => {
-        Todo.insertMany(todos);
-    }).then(() => done());
-});
+beforeEach(populateUsers);
+beforeEach(populateTodos);
 
 describe('Post /todos', () => {
    it('should create a new todo', (done) => {
@@ -192,4 +181,80 @@ describe('PATCH /todos/:id ', () => {
         .end(done);
     });
 
+});
+
+describe('GET /users/me', () => {
+    it('should return user if authenticated', (done) => {
+        request(app)
+            .get('/users/me')
+            .set({'x-auth' : users[0].tokens[0].token})
+            .expect(200)
+            .expect((res) => {
+                expect(res.body._id).toBe(users[0]._id.toString());
+                expect(res.body.email).toBe(users[0].email);
+            })
+        .end(done);
+    });
+
+    it('should return 401 if not authenticated', (done) => {
+        request(app)
+            .get('/users/me')
+            .set({'x-auth' : {}})
+            .expect(401)
+            .expect((res) => {
+                expect(res.body).toEqual({});
+            })
+            .end(done);
+    });
+});
+
+describe('POST /users', () => {
+    it('should create a new user', (done) => {
+        var email = 'yaniv123@yaniv.com';
+        var password = '123poi123';
+        request(app)
+            .post('/users')
+            .send({email: email, password: password})
+            .expect(200)
+            .expect((res) => {
+                expect(res.headers['x-auth']).toExist();
+                expect(res.body._id).toExist();
+                expect(res.body.email).toBe(email);
+            })
+            .end((err) => {
+                if (err) {
+                    return done(err);
+                }
+                User.findOne({email : email}).then((user) => {
+                    expect(user.password).toNotBe(password)
+                    expect(user._id).toExist();
+                    expect(user.email).toBe(email);
+                    done();
+                }).catch((e) => done(e));
+            });
+    });
+
+    it('should return validation error for incorrect email', (done) => {
+        request(app)
+            .post('/users')
+            .send({email : 'yyy', password : 'password'})
+            .expect(400)
+            .end(done);
+    });
+
+    it('should return validation error for too short password', (done) => {
+        request(app)
+            .post('/users')
+            .send({email : 'yyy@yaniv.com', password : '111'})
+            .expect(400)
+            .end(done);
+    });
+
+    it('should return validation error for ununique email', (done) => {
+        request(app)
+            .post('/users')
+            .send({email : 'yanivTest@yaniv.com', password : '111'})
+            .expect(400)
+            .end(done);
+    });
 });

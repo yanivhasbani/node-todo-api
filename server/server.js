@@ -3,6 +3,7 @@ const _ = require('lodash');
 const express = require('express');
 const bodyParser = require('body-parser');
 const {ObjectID} = require('mongodb');
+const bcrypt = require('bcryptjs');
 
 var {mongoose} = require('./db/mongoose');
 var {Todo} = require('./models/todo');
@@ -15,11 +16,6 @@ const port = process.env.PORT;
 //Middleware
 //To make the res.body to become a JSON
 app.use(bodyParser.json());
-
-//This route is called with a middleware authenticate
-app.get('/users/me', authenticate, (req, res) => {
-   res.send(req.user);
-});
 
 //POST a new todo
 app.post('/todos', (req, res) => {
@@ -134,12 +130,12 @@ app.post('/users', (req, res) => {
 
    var user = new User(body);
 
-   user.save().then(() => {
+   user.save().then((user) => {
       return user.generateAuthToken();
    }).then((token) => {
       // This then is generated from the value promised
       // returned from generateAuthToken!
-      if (!user) {
+      if (!token) {
          return res.status(404).send();
       }
 
@@ -149,6 +145,36 @@ app.post('/users', (req, res) => {
       return res.status(400).send(e)
    });
 });
+
+//This route is called with a middleware authenticate
+app.get('/users/me', authenticate, (req, res) => {
+   res.send(req.user);
+});
+
+//POST request for login
+app.post('/users/login', (req, res) => {
+   var body = _.pick(req.body, ['email', 'password']);
+   if (!body.email || !body.password) {
+      return res.status(404).send('No email or password were supplied');
+   }
+
+   User.findByCredentials(body.email, body.password).then((user) => {
+      user.generateAuthToken().then((token) => {
+         // This then is generated from the value promised
+         // returned from generateAuthToken!
+         if (!token) {
+            return res.status(404).send();
+         }
+
+         //x- is the standard for custom header in HTTP
+         res.header('x-auth', token).send(user);
+      });
+   }).catch((e) => {
+      res.status(400).send()
+   });
+
+});
+
 
 //Open port
 app.listen(port, () => {

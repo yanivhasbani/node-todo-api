@@ -75,8 +75,8 @@ UserSchema.methods.generateAuthToken = function () {
 
 
 //Model methods(Class methods)
+
 UserSchema.statics.findByToken = function(token) {
-    console.log('Token', token);
     var User = this;
     var decoded;
 
@@ -84,7 +84,6 @@ UserSchema.statics.findByToken = function(token) {
         decoded = jwt.verify(token, 'abc123');
         console.log('Decode', decoded);
     } catch (e) {
-        console.log('Error:', e);
         //Create a new promise and reject it automatically.
         //That way, if there is a catch on what is calling this
         //it will receive an error because of this reject!
@@ -96,6 +95,28 @@ UserSchema.statics.findByToken = function(token) {
         //Nested query - Tokens is an array!
         'tokens.token' : token,
         'tokens.access' : 'auth'
+    });
+};
+
+UserSchema.statics.findByCredentials = function(email, password) {
+    var User = this;
+
+    return User.findOne({email}).then((user) => {
+        if (!user) {
+            return Promise.reject();
+        }
+        return new Promise((resolve, reject) => {
+            var hashedPassword = user.password;
+            bcrypt.compare(password, hashedPassword, (err, result) => {
+                if (err || !result) {
+                    if (err) {
+                        console.log('Error in password validation. err = ', err);
+                    }
+                    reject();
+                }
+                resolve(user);
+            });
+        });
     });
 };
 
