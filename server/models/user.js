@@ -72,6 +72,32 @@ UserSchema.methods.generateAuthToken = function () {
     });
 };
 
+
+//Model methods(Class methods)
+UserSchema.statics.findByToken = function(token) {
+    console.log('Token', token);
+    var User = this;
+    var decoded;
+
+    try {
+        decoded = jwt.verify(token, 'abc123');
+        console.log('Decode', decoded);
+    } catch (e) {
+        console.log('Error:', e);
+        //Create a new promise and reject it automatically.
+        //That way, if there is a catch on what is calling this
+        //it will receive an error because of this reject!
+        return Promise.reject();
+    }
+
+    return User.findOne({
+        '_id' : decoded._id,
+        //Nested query - Tokens is an array!
+        'tokens.token' : token,
+        'tokens.access' : 'auth'
+    });
+};
+
 var User = mongoose.model('Users', UserSchema);
 
 module.exports = {
