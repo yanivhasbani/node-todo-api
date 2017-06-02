@@ -14,7 +14,7 @@ const port = process.env.PORT;
 //Middleware - To make the res.body to become a JSON
 app.use(bodyParser.json());
 
-//Create a new todo
+//POST a new todo
 app.post('/todos', (req, res) => {
    var todo = new Todo({
       text : req.body.text
@@ -28,7 +28,7 @@ app.post('/todos', (req, res) => {
    });
 });
 
-//Get all the todos from DB
+//GET all the todos from DB
 app.get('/todos', (req, res) => {
    Todo.find().then((todos) => {
       console.log(`Succesfully got all todos = ${JSON.stringify(todos, undefined, 2)}`);
@@ -40,7 +40,7 @@ app.get('/todos', (req, res) => {
    });
 });
 
-//Get specific todo by id - URL parameter
+//GET specific todo by id - URL parameter
 app.get('/todos/:id', (req, res) => {
    //get :id from url - req.params is a dictionary
    var id = req.params.id;
@@ -118,6 +118,31 @@ app.patch('/todos/:id', (req, res) => {
    });
 });
 
+//POST a new user
+app.post('/users', (req, res) => {
+   var body = _.pick(req.body, ['email', 'password']);
+   if (!body.email || !body.password) {
+      return res.status(404).send('No email or password were supplied');
+   }
+
+   var user = new User(body);
+
+   user.save().then(() => {
+      return user.generateAuthToken();
+   }).then((token) => {
+      // This then is generated from the value promised
+      // returned from generateAuthToken!
+      if (!user) {
+         return res.status(404).send();
+      }
+
+      //x- is the standard for custom header in HTTP
+      res.header('x-auth', token).send(user);
+   }).catch((e) => {
+      return res.status(400).send(e)
+   });
+});
+
 //Open port
 app.listen(port, () => {
    console.log(`Started on port ${port}`);
@@ -125,8 +150,11 @@ app.listen(port, () => {
 
 module.exports = {app};
 
+//NPM
+//Email validator - https://www.npmjs.com/package/validator
+
 //URLS:
-//Mongoose validators - http://mongoosejs.com/docs/validation.html
+//Mongoose validation - http://mongoosejs.com/docs/validation.html
 //Mongoose schemas - http://mongoosejs.com/docs/guide.html
 
 //Heroku

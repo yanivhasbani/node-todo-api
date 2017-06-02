@@ -4,7 +4,7 @@
 /**
  * Created by yaniv on 5/29/17.
  */
-if (!process.env.NODE_ENV === 'yaniv') {
+if (process.env.NODE_ENV === 'yaniv') {
     var env = process.env.TUT_NODE_ENV;
     if (env === 'development') {
         process.env.PORT = 4001;
