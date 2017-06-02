@@ -5,10 +5,7 @@ const {User} = require('./../models/user');
 
 //Middleware to autehnticate and change req with correct info from DB
 var authenticate = (req, res, next) => {
-    console.log('Here');
     var token = req.header('x-auth');
-    console.log('Token0:', token);
-    console.log('Req:', req.headers);
 
     User.findByToken(token).then((user) => {
         if (!user) {

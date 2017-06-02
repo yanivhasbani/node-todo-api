@@ -163,6 +163,7 @@ module.exports = {app};
 //URLS:
 //Mongoose validation - http://mongoosejs.com/docs/validation.html
 //Mongoose schemas - http://mongoosejs.com/docs/guide.html
+//Mongoose middleware - http://mongoosejs.com/docs/middleware.html
 
 //Heroku
 //https://elements.heroku.com/addons/mongolab
