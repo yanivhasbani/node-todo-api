@@ -18,9 +18,10 @@ const port = process.env.PORT;
 app.use(bodyParser.json());
 
 //POST a new todo
-app.post('/todos', (req, res) => {
+app.post('/todos', authenticate, (req, res) => {
    var todo = new Todo({
-      text : req.body.text
+      text : req.body.text,
+      _creator : req.user._id
    });
    todo.save().then((doc) => {
       console.log(`Succesfully saved todo = ${doc}`);
@@ -32,8 +33,10 @@ app.post('/todos', (req, res) => {
 });
 
 //GET all the todos from DB
-app.get('/todos', (req, res) => {
-   Todo.find().then((todos) => {
+app.get('/todos', authenticate, (req, res) => {
+   Todo.find({
+      _creator : req.user._id
+   }).then((todos) => {
       console.log(`Succesfully got all todos = ${JSON.stringify(todos, undefined, 2)}`);
       //No need to add status here as 200 is the default!
       res.send({todos});
@@ -44,7 +47,7 @@ app.get('/todos', (req, res) => {
 });
 
 //GET specific todo by id - URL parameter
-app.get('/todos/:id', (req, res) => {
+app.get('/todos/:id', authenticate, (req, res) => {
    //get :id from url - req.params is a dictionary
    var id = req.params.id;
 
@@ -53,7 +56,10 @@ app.get('/todos/:id', (req, res) => {
       return res.status(404).send({});
    }
 
-   Todo.findById(id).then((todo) => {
+   Todo.findOne({
+      _id : id,
+      _creator : req.user._id
+   }).then((todo) => {
       if (!todo) {
          console.log(('No todo with that specific ID'));
          return res.status(404).send({});
@@ -67,14 +73,17 @@ app.get('/todos/:id', (req, res) => {
 });
 
 //DELETE specific todo by id
-app.delete('/todos/:id', (req, res) => {
+app.delete('/todos/:id', authenticate, (req, res) => {
    var id = req.params.id;
    if (!ObjectID.isValid(id)) {
       console.log('Invalid id');
       return res.status(404).send({});
    }
 
-   Todo.findByIdAndRemove(id).then((todo) => {
+   Todo.findOneAndRemove({
+      _id : id,
+      _creator : req.user._id
+   }).then((todo) => {
       if (!todo) {
          console.log(`ID ${id} does not match any item on DB`);
          return res.status(404).send();
@@ -87,7 +96,7 @@ app.delete('/todos/:id', (req, res) => {
 });
 
 //PATCH specific todo by id
-app.patch('/todos/:id', (req, res) => {
+app.patch('/todos/:id', authenticate, (req, res) => {
    var id = req.params.id;
    //Pick the propertis you with out of a dictionary and returns those only!
    var body = _.pick(req.body, ['text', 'completed']);
@@ -104,7 +113,10 @@ app.patch('/todos/:id', (req, res) => {
       body.completedAt = null;
    }
 
-   Todo.findByIdAndUpdate(id, {
+   Todo.findOneAndUpdate({
+      _id : id,
+      _creator : req.user._id
+   }, {
       $set : body
    }, {
       new : true
@@ -151,7 +163,7 @@ app.get('/users/me', authenticate, (req, res) => {
    res.send(req.user);
 });
 
-//POST request for login
+//POST request for login - used for different types of devices
 app.post('/users/login', (req, res) => {
    var body = _.pick(req.body, ['email', 'password']);
    if (!body.email || !body.password) {

@@ -21,6 +21,11 @@ var Todo = mongoose.model('Todo', {
     completedAt : {
         type : Number,
         default : null
+    },
+    //_ => The standard for using ObjectId!
+    _creator : {
+        type : mongoose.Schema.Types.ObjectId,
+        required: true
     }
 });
 
